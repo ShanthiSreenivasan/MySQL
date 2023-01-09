@@ -1,0 +1,94 @@
+rm(list=ls())
+library(magrittr)
+library(tibble)
+library(dplyr)
+library(plyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(data.table)
+library(openxlsx)
+library(purrr)
+library(janitor)
+
+
+ARS_IB <- read.xlsx("C:\\Users\\User\\Desktop\\CFU_ARS_DSA\\ARS\\IB MIS_Pivot.xlsx",sheet = 'MIVR_base')
+names(ARS_IB)
+names(ARS_IB)[6]<-c("Customer_Name")
+names(ARS_IB)[8]<-c("Campaign_Name")
+names(ARS_IB)[3]<-c("last_result")
+#names(Output_fields)
+#ARS_IB_df1 <- ARS_IB %>%
+#  group_by(Campaign_Name) %>% summarise(Total_Calls = count(Campaign_Name))
+
+ARS_IB_df1 <- ARS_IB %>% group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Total_Calls` = Total_Calls)
+
+
+ARS_IB_df2 <- ARS_IB %>%  filter(last_result %in% c("Answered Linkcall", "Answered Linkcall Abandoned", "Busy", "Invalid", "No Answer", "Failed No Lines", "Canceled", "Answered Hangup")) %>%
+group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Dialled` = Total_Calls)
+
+ARS_IB_df3 <- ARS_IB %>%  filter(last_result %in% c("Answered Linkcall", "Answered Linkcall Abandoned", "Answered Hangup")) %>%
+  group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Answered` = Total_Calls)
+
+ARS_IB_df4 <- ARS_IB %>%  filter(last_result %in% c("Answered Linkcall", "Answered Linkcall Abandoned")) %>%
+  group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Keypress` = Total_Calls)
+
+
+ARS_IB_df5 <- ARS_IB %>%  filter(last_result %in% c("Answered Linkcall")) %>%
+  group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Connected` = Total_Calls)
+
+
+ARS_IB_df6 <- ARS_IB %>%  filter(last_result %in% c("Answered Linkcall Abandoned")) %>%
+  group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Abandoned` = Total_Calls)
+
+ARS_IB_df7 <- ARS_IB %>%  filter(last_result %in% c("Answered Hangup")) %>%
+  group_by(Campaign_Name) %>% dplyr::summarise(Total_Calls = n_distinct(User_ID, na.rm = TRUE)) %>% adorn_totals("row") %>% dplyr::rename(`Hangup` = Total_Calls)
+
+
+length(ARS_IB_df7) <- length(ARS_IB_df1)
+
+b1<-data.frame(ARS_IB_df1=ARS_IB_df1, ARS_IB_df2=ARS_IB_df2, ARS_IB_df3=ARS_IB_df3, ARS_IB_df4=ARS_IB_df4, ARS_IB_df5=ARS_IB_df5, ARS_IB_df6=ARS_IB_df6)
+
+#b1 <- subset (b1, select = -c ("ARS_IB_df2.Campaign_Name"))
+
+#test_df <- data.frame(b1)
+
+rm_col <- c("ARS_IB_df2.Campaign_Name", "ARS_IB_df3.Campaign_Name", "ARS_IB_df4.Campaign_Name", "ARS_IB_df5.Campaign_Name", "ARS_IB_df6.Campaign_Name", "ARS_IB_df7.Campaign_Name")
+b1 = b1[, !(colnames(b1) %in% rm_col)]
+
+colnames(b1)[which(names(b1) == "ARS_IB_df1.Campaign_Name")] <- "Campaign_Name"
+colnames(b1)[which(names(b1) == "ARS_IB_df1.Total_Calls")] <- "Total_Calls"
+colnames(b1)[which(names(b1) == "ARS_IB_df2.Dialled")] <- "Dialled"
+colnames(b1)[which(names(b1) == "ARS_IB_df3.Answered")] <- "Answered"
+colnames(b1)[which(names(b1) == "ARS_IB_df4.Keypress")] <- "Keypress"
+colnames(b1)[which(names(b1) == "ARS_IB_df5.Connected")] <- "Connected"
+colnames(b1)[which(names(b1) == "ARS_IB_df6.Abandoned")] <- 'Non connected / Abandoned'
+colnames(b1)[which(names(b1) == "ARS_IB_df7.Hangup")] <- "Hangup"
+b1
+
+#b1 %>% rename(
+#  Dialled = "Dialled.freq",
+#  Answered = "Answered.freq"
+#)
+#data[!(colnames(data) %in% c('col_1','col_2'))]
+#colnames(ARS_IB_df1)[which(colnames(df) == 'old_colname')] <- 'new_colname'
+
+
+OB_call <- read.xlsx("C:\\Users\\User\\Desktop\\CFU_ARS_DSA\\ARS\\IB MIS_Pivot.xlsx",sheet = 'OB_call to connect_base')
+colnames(OB_call)
+OB_call$addColumnDataGroups("Last.Result")
+#OB_call_df1 <- OB_call %>% group_by(Last.Result) %>% dplyr::summarise(Total_Calls = n(Phone.Number.rm = TRUE))
+OB_call_df1 <- OB_call %>% group_by(Last.Result) %>% summarise(Last.Result = count(Last.Result))
+
+
+colnames(ARS_CHATBOT)
+ARS_CHATBOT <- read.xlsx("C:\\Users\\User\\Desktop\\CFU_ARS_DSA\\ARS\\IB MIS_Pivot.xlsx",sheet = 'ARS CHATBOT DUMP')
+thisdate<-format(Sys.Date()-1,'%Y-%m-%d')
+#ARS_CHATBOT_df1 <- ARS_CHATBOT %>% filter(chatbot_agent_id %in% c(1, 2, 3, 4)) %>% filter(created_at == thisdate) %>% summarise(ARS = count(user_id))
+ARS_CHATBOT_df1 <- ARS_CHATBOT %>% filter(chatbot_agent_id %in% c(1, 2, 3, 4), as_date(created_at) == thisdate) %>% summarise(ARS = count(user_id))
+
+
+colnames(IB_Drop)
+IB_Drop <- read.xlsx("C:\\Users\\User\\Desktop\\CFU_ARS_DSA\\ARS\\IB MIS_Pivot.xlsx",sheet = 'IB_Drop Off_pivot')
+IB_Drop_df1 <- IB_Drop %>% summarise(Total_Calls = count(Result))
+
