@@ -1,0 +1,25 @@
+currentDate <-(Sys.Date()-1)
+eopm <- as.Date(currentDate - days(day(currentDate)))
+sopm <- as.Date(currentDate - days(day(currentDate)))
+sopm <- as.Date(sopm - days(day(sopm) - 1))
+df4 <-lubridate::days_in_month(today()-4)
+month_startDate <- lubridate::floor_date(Sys.Date(), unit = "month")
+work_finished_days <- ceiling_date(today()) - month_startDate
+Total_Days <- df4 - work_finished_days
+Remaining_days <- work_finished_days - eopm
+
+#NXT_MONTH_START <- floor_date(DATE, "months") + days(31)
+#NXT_DTD_START <- ymd(Sys.Date() - 1) + days(31)\\
+
+
+split_df2 <- jointdf[row.names(jointdf) %in% (n+1):nrow(jointdf), ]
+
+# n<-"Total"
+# split_df1 <- jointdf[jointdf$Lender.Name == n, ]
+
+
+#return_column integer(empty)
+
+dfMale <- mydata[which(mydata$gender == "m"),]
+dfFemale <- mdata[which(mydata$gender == "f"),]
+dfOther <- mydata[!(1:dim(mydata][1] %in% c(which(mydata$gender == "m"),which(mydata$gender == "f"))]
